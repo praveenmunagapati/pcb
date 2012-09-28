@@ -41,5 +41,6 @@
 #include "mymem.h"
 
 POLYAREA * ThermPoly (PCBType *, PinType *, Cardinal);
+POLYAREA * ThermPolyPad (PCBType *, PadType *, Cardinal);
 
 #endif

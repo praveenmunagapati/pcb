@@ -109,6 +109,7 @@ static void *SetPadSquare (ElementType *, PadType *);
 static void *ClrPadSquare (ElementType *, PadType *);
 static void *ChangeViaThermal (PinType *);
 static void *ChangePinThermal (ElementType *, PinType *);
+static void *ChangePadThermal (ElementType *, PadType *);
 static void *ChangeLineJoin (LayerType *, LineType *);
 static void *SetLineJoin (LayerType *, LineType *);
 static void *ClrLineJoin (LayerType *, LineType *);
@@ -162,7 +163,7 @@ static ObjectFunctionType ChangeThermalFunctions = {
   NULL,
   NULL,
   ChangePinThermal,
-  NULL,
+  ChangePadThermal,
   NULL,
   NULL,
   NULL,
@@ -379,6 +380,26 @@ ChangePinThermal (ElementType *element, PinType *Pin)
   ClearFromPolygon (PCB->Data, VIA_TYPE, CURRENT, Pin);
   DrawPin (Pin);
   return Pin;
+}
+
+/* ---------------------------------------------------------------------------
+ * changes the thermal on a pad 
+ * returns TRUE if changed
+ */
+static void *
+ChangePadThermal (ElementType * element, PadType * Pad)
+{
+  AddObjectToClearPolyUndoList (PAD_TYPE, element, Pad, Pad, false);
+  RestoreToPolygon (PCB->Data, PAD_TYPE, CURRENT, Pad);
+  AddObjectToFlagUndoList (PAD_TYPE, element, Pad, Pad);
+  if (!Delta)			/* remove the thermals */
+    CLEAR_THERM (INDEXOFCURRENT, Pad);
+  else
+    ASSIGN_THERM (INDEXOFCURRENT, Delta, Pad);
+  AddObjectToClearPolyUndoList (PAD_TYPE, element, Pad, Pad, true);
+  ClearFromPolygon (PCB->Data, PAD_TYPE, CURRENT, Pad);
+  DrawPad (Pad);
+  return Pad;
 }
 
 /* ---------------------------------------------------------------------------
