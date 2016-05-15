@@ -53,6 +53,7 @@ PCB_SRCS = \
 	crosshair.h \
 	data.c \
 	data.h \
+	differential.c \
 	djopt.c \
 	djopt.h \
 	dolists.h \
