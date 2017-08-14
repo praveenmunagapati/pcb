@@ -78,6 +78,7 @@
 #endif
 
 
+#include "action.h"
 #include "buffer.h"
 #include "change.h"
 #include "create.h"
@@ -402,6 +403,16 @@ real_load_pcb (char *Filename, bool revert)
   char *new_filename;
   PCBType *newPCB = CreateNewPCB ();
   PCBType *oldPCB;
+  int automatic;
+  char *mode;
+  char **sources = NULL;
+  int nsources = -1;
+  char sname[40];
+  char *src;
+  char *tmpfile = NULL;
+  char **cmd;
+  int i;
+
 #ifdef DEBUG
   double elapsed;
   clock_t start, end;
@@ -462,7 +473,119 @@ real_load_pcb (char *Filename, bool revert)
         {
           PCB->Grid = GetValue (grid_size, NULL, NULL);
         }
- 
+
+      /* Check for imported netlists from a schematic. */
+      if (AttributeGet (PCB, "import::src0"))
+      {
+        /* Attempt to find an Import Automatic attribute. */
+        if (AttributeGet (PCB, "import::automatic"))
+        {
+          Message (_("Found an Import Automatic attribute.\n"));
+
+          /* Attempt to find an Import Mode attribute. */
+          if (! mode)
+          {
+            mode = AttributeGet (PCB, "import::mode");
+          }
+
+          /* Test if we got a valid import mode. */
+          if (mode)
+          {
+            Message (_("Found Import Mode attribute \"%s\".\n"), mode);
+          }
+          else
+          {
+            /* Default to a familiar fall back option. */
+            Message (_("No Import Mode attribute found, setting fall back option \'gnetlist\".\n"));
+            mode = "gnetlist";
+            AttributePut (PCB, "import::mode", mode);
+          }
+
+          /* Attempt to find more Import Source attributes. */
+          do {
+            nsources ++;
+            sprintf (sname, "import::src%d", nsources);
+            src = AttributeGet (PCB, sname);
+            if (src)
+            {
+              Message (_("Found Import Schematic attribute \"%s\".\n"), src);
+            }
+          } while (src);
+            Message (_("Found %d Import Schematic attributes.\n"), nsources);
+
+          /* Test if we found some and load the schematic(s) basename
+           * (pathname + filename). */
+          if (nsources > 0)
+          {
+            sources = (char **) malloc ((nsources + 1) * sizeof (char *));
+            nsources = -1;
+            do {
+              nsources ++;
+              sprintf (sname, "import::src%d", nsources);
+              src = AttributeGet (PCB, sname);
+              sources[nsources] = src;
+            } while (src);
+          }
+
+          /* Attempt to create netlists from the schematics. */
+          tmpfile = tempfile_name_new ("gnetlist_output");
+
+          if (tmpfile == NULL)
+          {
+            Message (_("Could not create temp file for gnetlist output.\n"));
+            return 1;
+          }
+
+          cmd = (char **) malloc ((7 + nsources) * sizeof (char *));
+          cmd[0] =  Settings.GnetlistProgram;
+          cmd[1] = "-g";
+          cmd[2] = "pcbfwd";
+          cmd[3] = "-o";
+          cmd[4] = tmpfile;
+          cmd[5] = "--";
+          for (i = 0; i < nsources; i++)
+          {
+            cmd[6 + i] = sources[i];
+          }
+          cmd[6 + nsources] = NULL;
+
+          Message (_("Attempting to execute tmpfile %s for gnetlist output.\n"), tmpfile);
+
+          if (pcb_spawnvp (cmd))
+          {
+            unlink (tmpfile);
+            return 1;
+          }
+
+          cmd[0] = tmpfile;
+          cmd[1] = NULL;
+          ActionExecuteFile (1, cmd, 0, 0);
+
+          /* Attempt to load the netlists from the tempfile. */
+          if (PCB->Netlistname)
+          {
+            free (PCB->Netlistname);
+          }
+          PCB->Netlistname = StripWhiteSpaceAndDup (tmpfile);
+          FreeLibraryMemory (&PCB->NetlistLib);
+          ImportNetlist (PCB->Netlistname);
+          NetlistChanged (1);
+
+          /* Clean up stuff. */
+          tempfile_unlink (tmpfile);
+          if (cmd)
+          {
+            free (cmd);
+          }
+        }
+        else
+        {
+          Message (_("No Import Automatic attribute found.\n"));
+          Message (_("Please update the netlist(s) manual by using:\n"));
+          Message (_("\"Import Schematics\" command if required.\n"));
+        }
+      }
+
       sort_netlist ();
 
       set_some_route_style ();

@@ -6944,7 +6944,7 @@ Lines starting with @code{#} are ignored.
 
 %end-doc */
 
-static int
+int
 ActionExecuteFile (int argc, char **argv, Coord x, Coord y)
 {
   FILE *fp;
@@ -7378,7 +7378,7 @@ ActionExecCommand (int argc, char **argv, Coord x, Coord y)
 
 /* ---------------------------------------------------------------- */
 
-static int
+int
 pcb_spawnvp (char **argv)
 {
 #ifdef HAVE__SPAWNVP
@@ -7433,7 +7433,7 @@ pcb_spawnvp (char **argv)
  * with tempfile_unlink to make sure the temporary directory is also
  * removed when mkdtemp() is used.
  */
-static char *
+char *
 tempfile_name_new (char * name)
 {
   char *tmpfile = NULL;
@@ -7519,7 +7519,7 @@ tempfile_name_new (char * name)
  * If we have mkdtemp() then our temp file lives in a temporary
  * directory and we need to remove that directory too.
  */
-static int
+int
 tempfile_unlink (char * name)
 {
 #ifdef DEBUG

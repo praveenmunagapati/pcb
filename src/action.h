@@ -38,11 +38,17 @@
 #define CLONE_TYPES LINE_TYPE | ARC_TYPE | VIA_TYPE | POLYGON_TYPE
 
 void ActionAdjustStyle (char *);
+int ActionExecuteFile (int, char **, Coord, Coord);
 void EventMoveCrosshair (int, int);
 
 void AdjustAttachedObjects (void);
 
 void warpNoWhere (void);
+
+int pcb_spawnvp (char **);
+char *tempfile_name_new (char *);
+int tempfile_unlink (char *);
+
 
 /* In gui-misc.c */
 bool ActionGetLocation (char *);
