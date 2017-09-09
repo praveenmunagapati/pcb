@@ -1961,6 +1961,7 @@ select the desired exporter.
 * png::		       Image.
 * ps::		       Postscript.
 * eps::		       Eps.
+* shopper::            pcbshopper.com RFQ.
 @end menu
 
 @node bom
@@ -2087,6 +2088,13 @@ Can be later converted to pdf.
 
 Export as eps (encapsulated postscript) for inclusion in other documents.
 Can be later converted to pdf.
+
+@node shopper
+@subsection pcbshopper.com RFQ.
+@cindex shopper
+@cindex rfq export
+
+Produces a Request For Quotation and sends it to pcbshopper.com.
 
 
 @node Connection Lists
